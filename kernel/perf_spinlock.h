@@ -2,7 +2,7 @@
 #define __PERF_SPINLOCK_H__
 
 
-void perf_spinlock(int num_thread);
+void perf_spinlock_multiple(int threads, int tests);
 
 
 #endif
