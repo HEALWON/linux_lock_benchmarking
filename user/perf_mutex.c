@@ -6,33 +6,25 @@
 #include "common.h"
 
 pthread_mutex_t mutex[MAX_TEST];
+pthread_barrier_t barrier[MAX_TEST]; 
 int var = 0;
 
 int num_thread = 1;
 int num_test = 1;
-
-void *reader_func(void *data)
-{
-  pthread_mutex_t *lock = (pthread_mutex_t *) data;
-
-  for (int i = 0; i < ITER; i++) {
-    pthread_mutex_lock(lock);
-    spin(DURATION);
-    pthread_mutex_unlock(lock);
-  }
-
-  return 0;
-}
+int verbose = 0;
 
 void *writer_func(void *data)
 {
-  pthread_mutex_t *lock = (pthread_mutex_t *) data;
+  int idx = *((int *) data);
+  free(data);
+
+  pthread_barrier_wait(&barrier[idx]);
 
   for (int i = 0; i < ITER; i++) {
-    pthread_mutex_lock(lock);
+    pthread_mutex_lock(&mutex[idx]);
     // var++;
     spin(DURATION);
-    pthread_mutex_unlock(lock);
+    pthread_mutex_unlock(&mutex[idx]);
   }
 
   return 0;
@@ -44,20 +36,25 @@ void *perf_mutex(void *data)
   struct timeval start, end, elapsed;
   int ret, status;
   int i;
+  int *arg;
   int idx = *((int *) data);
   free(data);
 
   pthread_mutex_init(&mutex[idx], NULL);
-
-  gettimeofday(&start, NULL);
+  pthread_barrier_init(&barrier[idx], NULL, num_thread + 1);
 
   for (i = 0; i < num_thread; i++) {
-    ret = pthread_create(&tid[i], NULL, writer_func, &mutex[idx]);
+    arg = (int *)malloc(sizeof(int));
+    *arg = idx;
+    ret = pthread_create(&tid[i], NULL, writer_func, arg);
     if (ret < 0) {
       perror("pthread create error");
       exit(EXIT_FAILURE);    
     }
   }
+
+  gettimeofday(&start, NULL);
+  pthread_barrier_wait(&barrier[idx]);
 
   for (i = 0; i < num_thread; i++) {
     pthread_join(tid[i], NULL);
@@ -68,9 +65,12 @@ void *perf_mutex(void *data)
 
   // if (var != num_writer * ITER)
   //   perror("synchronization failed\n");
-  printf("(test %d) Elapsed time: %ld.%06ld (s)\n", idx, elapsed.tv_sec, elapsed.tv_usec);
+  if (verbose)
+    printf("(test %d) Elapsed time: %ld.%06ld (s)\n", idx, elapsed.tv_sec, elapsed.tv_usec);
+  else
+    printf("%ld.%06ld\n", elapsed.tv_sec, elapsed.tv_usec);
 
-  return;
+  return 0;
 }
 
 int main(int argc, char *argv[])
@@ -81,12 +81,13 @@ int main(int argc, char *argv[])
   int *arg;
 
   if (argc < 3) {
-    printf("usage: %s [num_thread] [num_test]\n", argv[0]);
+    printf("usage: %s [num_thread] [num_test] [verbose]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 
   num_thread = atoi(argv[1]);
   num_test = atoi(argv[2]);
+  verbose = (argc < 4)? 0 : 1;
 
   printf("benchmarking mutex... (threads = %d, tests = %d)\n", num_thread, num_test);
 
