@@ -9,7 +9,7 @@
 static int threads = 4;
 module_param(threads, int, 0660);
 
-static int tests = 10;
+static int tests = 1;
 module_param(tests, int, 0660);
 
 static char *ltype = "spinlock";
@@ -20,12 +20,14 @@ static int mod_init(void)
     pr_info("Installing...");
 
     if (strcmp(ltype, "spinlock") == 0) {
-        //perf_spinlock_multiple(threads, tests);
+        (tests > 1)? perf_spinlock_multiple(threads, tests) : perf_spinlock_single(threads, tests);
     } else if (strcmp(ltype, "mutex") == 0) {
-        perf_mutex_multiple(threads, tests);
+        (tests > 1)? perf_mutex_multiple(threads, tests) : perf_mutex_single(threads, tests);
     } else {
         pr_info("Not supported lock type: %s\n", ltype);
     }
+
+    printk("Done\n");
 
     return 0;
 }
