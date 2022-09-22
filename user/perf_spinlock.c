@@ -23,7 +23,7 @@ void *writer_func(void *data)
 
   for (int i = 0; i < ITER; i++) {
     pthread_spin_lock(&spinlock[idx]);
-    // var++;
+    var++;
     spin(DURATION);
     pthread_spin_unlock(&spinlock[idx]);
   }
@@ -64,9 +64,9 @@ void *perf_spinlock(void *data)
   gettimeofday(&end, NULL);
   timersub(&end, &start, &elapsed);
 
-  // if (var != num_writer * ITER)
-  //   perror("synchronization failed\n");
-  if (verbose)
+  if (var != num_thread * ITER)
+    perror("synchronization failed\n");
+  else if (verbose)
     printf("(test %d) Elapsed time: %ld.%06ld (s)\n", idx, elapsed.tv_sec, elapsed.tv_usec);
   else
     printf("%ld.%06ld\n", elapsed.tv_sec, elapsed.tv_usec);
@@ -95,6 +95,13 @@ int main(int argc, char *argv[])
   for (i = 0; i < num_test; i++) {
     arg = (int *)malloc(sizeof(int));
     *arg = i;
+    var = 0;
+    perf_spinlock(arg);
+  }
+/*
+  for (i = 0; i < num_test; i++) {
+    arg = (int *)malloc(sizeof(int));
+    *arg = i;
     ret = pthread_create(&tid[i], NULL, perf_spinlock, arg);
     if (ret < 0) {
       perror("pthread create error");
@@ -105,7 +112,7 @@ int main(int argc, char *argv[])
   for (i = 0; i < num_test; i++) {
     pthread_join(tid[i], NULL);
   }
-
+*/
   printf("Done\n");
 
   return 0;

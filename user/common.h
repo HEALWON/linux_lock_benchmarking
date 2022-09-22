@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+// Configurations
+// #define MEASURE_WAITING_TIME
+
+// Parameters
 #define MAX_THREAD 16
 #define MAX_TEST 16
 #define ITER 10000

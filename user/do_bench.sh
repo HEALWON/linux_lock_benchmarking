@@ -1,14 +1,20 @@
 #!/bin/bash
 
-W=0
 T=(1 2 4 8 12 16)
+I=5
 
 make all
+
+echo "testing mutex..."
+
+for i in ${T[@]}; do
+    taskset ff ./perf_mutex ${i} ${I}
+done
 
 echo "testing spinlock..."
 
 for i in ${T[@]}; do
-    taskset ff ./perf_spinlock ${i} ${W}
+    taskset ff ./perf_spinlock ${i} ${I}
 done
 
 # echo "testing wrlock..."
@@ -16,9 +22,3 @@ done
 # for i in ${W[@]}; do
 #     taskset ff ./perf_rwlock ${T} ${i}
 # done
-
-echo "testing mutex..."
-
-for i in ${T[@]}; do
-    taskset ff ./perf_mutex ${i} ${W}
-done
