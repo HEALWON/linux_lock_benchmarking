@@ -59,8 +59,10 @@ static int perf_mutex(void *data)
 
   for (i = 0; i < num_thread; i++) {
     init_completion(&(args[i].comp));
+    args[i].ready = &ready;
     args[i].num_thread = num_thread;
     args[i].idx = idx;
+    
     tid[i] = kthread_run(writer_func, (void *) &args[i], "worker_thread");
     if (IS_ERR(tid[i])) {
       pr_err("pthread create error");
