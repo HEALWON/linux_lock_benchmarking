@@ -14,6 +14,7 @@ static int var[MAX_TEST];
 
 typedef struct {
   struct completion comp;
+  struct completion *ready;
   int num_thread;
   int idx;
 } args_t;
@@ -23,11 +24,12 @@ static int writer_func(void *data)
   int i;
 
   struct completion *comp = &(((args_t *) data)->comp);
+  struct completion *ready = ((args_t *) data)->ready;
   int num_thread = ((args_t *) data)->num_thread;
   int idx = ((args_t *) data)->idx;
 
-  atomic_add(1, &barrier[idx]);
-  while (atomic_read(&barrier[idx]) != num_thread + 1) {;}
+  atomic_inc(&barrier[idx]);
+  wait_for_completion(ready);
 
   for (i = 0; i < ITER; i++) {
     spin_lock(&spinlock[idx]);
@@ -43,6 +45,7 @@ static int perf_spinlock(void *data)
 {
   struct task_struct *tid[MAX_THREAD];
   args_t args[MAX_THREAD];
+  struct completion ready;
   ktime_t start, end, elapsed;
   int i;
   
@@ -50,13 +53,14 @@ static int perf_spinlock(void *data)
   int num_thread = ((args_t *) data)->num_thread; 
   int idx = ((args_t *) data)->idx;
 
+  init_completion(&ready);
   spin_lock_init(&spinlock[idx]);
   atomic_set(&barrier[idx], 0);
 
   for (i = 0; i < num_thread; i++) {
     init_completion(&(args[i].comp));
     args[i].num_thread = num_thread;
-    args[i].idx = i;
+    args[i].idx = idx;
     tid[i] = kthread_run(writer_func, (void *) &args[i], "worker_thread");
     if (IS_ERR(tid[i])) {
       pr_err("pthread create error");
@@ -67,7 +71,7 @@ static int perf_spinlock(void *data)
   while (atomic_read(&barrier[idx]) != num_thread) {;}
 
   start = ktime_get();
-  atomic_add(1, &barrier[idx]);
+  complete_all(&ready);
 
   for (i = 0; i < num_thread; i++)
     wait_for_completion(&(args[i].comp));
