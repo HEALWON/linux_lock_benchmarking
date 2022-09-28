@@ -2,9 +2,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
-#include "common.h"
-#include "perf_spinlock.h"
-#include "perf_mutex.h"
+#include "lockbench.h"
 
 static int threads = 4;
 module_param(threads, int, 0660);
@@ -12,17 +10,17 @@ module_param(threads, int, 0660);
 static int tests = 1;
 module_param(tests, int, 0660);
 
-static char *ltype = "spinlock";
+static char *ltype = "mutex";
 module_param(ltype, charp, 0660);
 
 static int mod_init(void)
 {
     pr_info("Installing...");
 
-    if (strcmp(ltype, "spinlock") == 0) {
-        perf_spinlock_multiple_seq(threads, tests);
-    } else if (strcmp(ltype, "mutex") == 0) {
-        perf_mutex_multiple_seq(threads, tests);
+    if (strcmp(ltype, "mutex") == 0) {
+        bench_multiple(LOCKTYPE_MUTEX, threads, tests);
+    } else if (strcmp(ltype, "spinlock") == 0) {
+        bench_multiple(LOCKTYPE_SPINLOCK, threads, tests);
     } else {
         pr_info("Not supported lock type: %s\n", ltype);
     }

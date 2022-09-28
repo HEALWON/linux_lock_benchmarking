@@ -1,20 +1,19 @@
 CC = gcc
 CFLAGS = -pthread
 
-TARGET = perf_mutex perf_rwlock perf_spinlock
-INC = common.c common.h
+TARGET = bench
+OBJS = main.o lockbench.o spin.o
 
 all: $(TARGET)
 
 .PHONY: clean
 clean: 
+	rm -f *.o
 	rm -f $(TARGET)
 
-perf_mutex: perf_mutex.c $(INC)
+bench: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-perf_rwlock: perf_rwlock.c $(INC)
-	$(CC) $(CFLAGS) -o $@ $^
-
-perf_spinlock: perf_spinlock.c $(INC)
-	$(CC) $(CFLAGS) -o $@ $^
+main.o: main.c
+lockbench.o: lockbench.c lockbench.h
+spin.o: spin.c spin.h

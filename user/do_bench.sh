@@ -8,13 +8,13 @@ make all
 echo "testing mutex..."
 
 for i in ${T[@]}; do
-    taskset ff ./perf_mutex ${i} ${I}
+    taskset ff ./bench mutex ${i} ${I}
 done
 
 echo "testing spinlock..."
 
 for i in ${T[@]}; do
-    taskset ff ./perf_spinlock ${i} ${I}
+    taskset ff ./bench spinlock ${i} ${I}
 done
 
 # echo "testing wrlock..."

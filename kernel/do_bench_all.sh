@@ -3,6 +3,7 @@
 T=(1 2 4 8 12 16)
 I=5
 
+make clean
 make all
 
 echo "testing mutex..."

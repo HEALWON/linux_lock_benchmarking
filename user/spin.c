@@ -1,4 +1,6 @@
-#include "common.h"
+#include <stdlib.h>
+#include <sys/time.h>
+#include "spin.h"
 
 void spin(long duration)
 {

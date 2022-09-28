@@ -1,0 +1,7 @@
+*.o
+*.ko
+*.cmd
+*.mod
+*.symvers
+*.order
+user/bench
